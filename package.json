@@ -1,0 +1,36 @@
+{
+  "name": "hermes-data-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "hermes-data": "./dist/adapters/cli/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/adapters/cli/index.ts",
+    "dev:api": "tsx src/adapters/api/server.ts",
+    "test": "vitest run",
+    "test:run": "vitest run",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "better-sqlite3": "^11.7.0",
+    "cac": "^6.7.14",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.38.3",
+    "execa": "^9.5.2",
+    "hono": "^4.6.16",
+    "pino": "^9.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.5",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
