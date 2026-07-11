@@ -1,0 +1,4 @@
+interface:
+  display_name: "HD Mail Report"
+  short_description: "Use hd to claim and report email summaries safely."
+  default_prompt: "Use $hd-mail-report to process pending Inbox emails and report a completed IM summary."

@@ -1,2 +1,2 @@
-// TODO: Wrap core services as MCP tools after the mock CLI/API workflow is stable.
+// TODO: Wrap core services as MCP tools after the Microsoft Graph mail workflow is stable.
 export {};

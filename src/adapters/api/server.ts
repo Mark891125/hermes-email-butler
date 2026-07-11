@@ -3,40 +3,25 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { collectMails } from '../../core/collect-mails.js';
-import { generateReport } from '../../core/generate-report.js';
-import { listLatestReport } from '../../core/list-latest-report.js';
 import { createAppContext } from '../../infra/app-context.js';
+import { loadConfig, type AppConfig } from '../../infra/config.js';
 import type { AppLogger } from '../../infra/logger.js';
-import { createMailProvider, createReportGenerator } from '../../infra/providers.js';
+import { createMicrosoftMailProvider } from '../../infra/providers.js';
 import type { Storage } from '../../ports/storage.js';
 
 interface ApiDependencies {
   storage: Storage;
+  config?: AppConfig;
   logger?: AppLogger;
 }
 
-const collectTaskSchema = z.object({
-  since: z.string().min(1).default('24h'),
-  provider: z.literal('mock').default('mock')
-});
-
-const generateTaskSchema = z.object({
-  source: z.literal('mock').default('mock')
-});
+const collectTaskSchema = z.object({}).strict();
 
 export const createApiApp = (dependencies?: ApiDependencies): Hono => {
-  const context = dependencies ?? createAppContext();
+  const context = dependencies ? { ...dependencies, config: dependencies.config ?? loadConfig() } : createAppContext();
   const app = new Hono();
 
   app.get('/health', (c) => c.json({ ok: true, service: 'hermes-data-gateway' }));
-
-  app.get('/reports/latest', async (c) => c.json(await listLatestReport({ storage: context.storage })));
-
-  app.get('/mails/pending', async (c) => {
-    const source = c.req.query('source');
-    const mails = await context.storage.listPendingMails({ source, limit: 50 });
-    return c.json({ mails });
-  });
 
   app.post('/tasks/collect-mails', async (c) => {
     const body = await c.req.json().catch(() => ({}));
@@ -49,14 +34,13 @@ export const createApiApp = (dependencies?: ApiDependencies): Hono => {
     const startedAt = Date.now();
     try {
       const result = await collectMails({
-        since: parsed.data.since,
-        source: parsed.data.provider,
-        provider: createMailProvider(parsed.data.provider),
+        source: 'microsoft',
+        provider: createMicrosoftMailProvider({ config: context.config, storage: context.storage }),
         storage: context.storage
       });
       context.logger?.info({
         action: 'collect-mails',
-        source: parsed.data.provider,
+        source: 'microsoft',
         status: 'success',
         durationMs: Date.now() - startedAt,
         input: parsed.data
@@ -65,43 +49,7 @@ export const createApiApp = (dependencies?: ApiDependencies): Hono => {
     } catch (error) {
       context.logger?.error({
         action: 'collect-mails',
-        source: parsed.data.provider,
-        status: 'failed',
-        durationMs: Date.now() - startedAt,
-        input: parsed.data,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      return c.json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 500);
-    }
-  });
-
-  app.post('/tasks/generate-report', async (c) => {
-    const body = await c.req.json().catch(() => ({}));
-    const parsed = generateTaskSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return c.json({ ok: false, error: parsed.error.flatten() }, 400);
-    }
-
-    const startedAt = Date.now();
-    try {
-      const result = await generateReport({
-        source: parsed.data.source,
-        storage: context.storage,
-        generator: createReportGenerator(parsed.data.source)
-      });
-      context.logger?.info({
-        action: 'generate-report',
-        source: parsed.data.source,
-        status: 'success',
-        durationMs: Date.now() - startedAt,
-        input: parsed.data
-      });
-      return c.json({ ok: true, ...result });
-    } catch (error) {
-      context.logger?.error({
-        action: 'generate-report',
-        source: parsed.data.source,
+        source: 'microsoft',
         status: 'failed',
         durationMs: Date.now() - startedAt,
         input: parsed.data,
