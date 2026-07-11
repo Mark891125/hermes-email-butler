@@ -3,12 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "bin": {
-    "hermes-data": "./dist/adapters/cli/index.js"
+    "hd": "./dist/cli/index.js"
   },
   "scripts": {
     "dev": "tsx src/adapters/cli/index.ts",
     "dev:api": "tsx src/adapters/api/server.ts",
+    "cli": "node dist/cli/index.js",
+    "start:api": "node dist/api/server.js",
     "test": "vitest run",
     "test:run": "vitest run",
     "build": "tsup",
@@ -27,7 +32,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
-    "@types/node": "^22.10.5",
+    "@types/node": "^24",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
